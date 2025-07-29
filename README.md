@@ -50,7 +50,7 @@ This project provides a robust Instagram scraper that:
 1. **Clone the repository**
 
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/mr-teslaa/instagram_user_post_scraper
     cd instagram-_user_post_scraper
     ```
 
@@ -97,10 +97,13 @@ Both scripts will prompt you to enter an Instagram username and will output the 
 		{
 			"img_src": "https://instagram.com/image1.jpg",
 			"img_caption": "Sample caption text"
-		}
+		},
+        .....
 	]
 }
 ```
+
+📄 **[View Sample Output](output.json)** - See real scraped data from our testing
 
 ## 📁 Project Structure
 
