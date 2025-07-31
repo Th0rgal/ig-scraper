@@ -31,6 +31,28 @@ def scrape_instagram_profile(username, headless=True, timeout=30):
         article = wait.until(EC.presence_of_element_located((By.TAG_NAME, 'article')))
         time.sleep(3)  # Allow content to load
         
+        # Keep clicking "Show more posts" button until it's no longer available
+        while True:
+            try:
+                # Find the actual button element (not the span inside it)
+                show_more_button = driver.find_element(By.XPATH, "//button[contains(@class, 'x1lugfcp') and .//span[contains(text(), 'Show more posts')]]")
+                button_text = show_more_button.text
+                print(f"Found button with text: '{button_text}' - clicking it...")
+                
+                # Use JavaScript click to avoid interception issues (no scrolling)
+                driver.execute_script("arguments[0].click();", show_more_button)
+                
+                # Wait a couple of seconds for new content to load
+                time.sleep(3)
+                
+            except NoSuchElementException:
+                print("Show more posts button not found - all posts should be loaded now")
+                break
+            except Exception as e:
+                print(f"Error clicking button: {str(e)}")
+                break
+        
+        # Now collect all the posts after loading everything
         posts = []
         post_links = article.find_elements(By.TAG_NAME, 'a')
         
