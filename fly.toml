@@ -1,0 +1,21 @@
+# fly.toml app configuration file generated for ig-scraper-floral-night-3984 on 2025-09-24T13:04:55+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'ig-scraper-floral-night-3984'
+primary_region = 'cdg'
+
+[build]
+dockerfile = 'Dockerfile'
+
+[build.args]
+ENV = 'release'
+
+[[restart]]
+policy = 'never'
+
+[[vm]]
+memory = '2gb'
+cpu_kind = 'performance'
+cpus = 1

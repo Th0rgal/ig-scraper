@@ -1,0 +1,12 @@
+.venv
+__pycache__
+*.pyc
+*.log
+
+debug/
+output.json
+
+chromedriver-win64/
+
+.git
+.gitignore
