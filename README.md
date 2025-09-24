@@ -92,3 +92,11 @@ fly deploy
 
 ## Legal
 Accesses only publicly available data. You are responsible for complying with Instagram’s Terms and applicable laws.
+
+---
+
+### Attribution
+Based on and adapted from [mr-teslaa/instagram_user_post_scraper](https://github.com/mr-teslaa/instagram_user_post_scraper).
+
+### License
+Licensed under the "Don't Be A Dick" Public License (DBAD) v1.1. See `LICENSE` for the full text. Learn more at [dbad-license.org](https://dbad-license.org/).
