@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import random
 from urllib.parse import urlparse, unquote
+import os
+import shutil
 import sys
 
 from selenium import webdriver
@@ -25,7 +27,14 @@ except Exception as e:
 
 
 def create_driver(headless: bool, debug: bool, proxy: str | None) -> webdriver.Chrome:
-    service = Service()
+    # Avoid Selenium Manager by providing explicit chromedriver path
+    chromedriver_path = shutil.which("chromedriver") or "/usr/local/bin/chromedriver"
+    if not os.path.exists(chromedriver_path):
+        # Fallback to CfT layout if present
+        cft_driver = "/opt/chromedriver/chromedriver"
+        if os.path.exists(cft_driver):
+            chromedriver_path = cft_driver
+    service = Service(executable_path=chromedriver_path)
     options = Options()
     if headless:
         options.add_argument("--headless=new")
@@ -37,8 +46,14 @@ def create_driver(headless: bool, debug: bool, proxy: str | None) -> webdriver.C
     options.add_argument("--ignore-certificate-errors")
     options.add_argument("--allow-insecure-localhost")
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--remote-debugging-port=0")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
+
+    # Ensure Chrome binary is known
+    chrome_bin = os.environ.get("CHROME_BIN") or "/opt/chrome/chrome"
+    if os.path.exists(chrome_bin):
+        options.binary_location = chrome_bin
 
     DESKTOP_USER_AGENTS = [
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
