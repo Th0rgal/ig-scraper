@@ -136,12 +136,15 @@ def main():
     job_row = fetch_job(base_url, headers, args.job_id)
     context_value = job_row.get("context")
 
+    # Prefer CLI --proxy, else fall back to PROXY_URL env (if set)
+    proxy_url = args.proxy or os.getenv("PROXY_URL")
+
     data = scrape_instagram_profile(
         args.username,
         headless=args.headless,
         timeout=args.timeout,
         debug=args.debug,
-        proxy=args.proxy,
+        proxy=proxy_url,
     )
 
     additions: List[Dict[str, Any]] = []
