@@ -50,14 +50,14 @@ docker buildx build --platform linux/amd64 -t ig-scraper:latest .
 Run without proxy:
 ```bash
 docker run --rm -it ig-scraper:latest \
-  python3 relens_launch.py --job-id 00000000-0000-0000-0000-000000000000 \
+  python3 launch_and_store.py --file-name casamorati_dal_1888.json \
     -u casamorati_dal_1888 --headless --timeout 60
 ```
 
 Run with proxy:
 ```bash
 docker run --rm -it ig-scraper:latest \
-  python3 relens_launch.py --job-id 00000000-0000-0000-0000-000000000000 \
+  python3 launch_and_store.py --file-name casamorati_dal_1888.json \
     -u casamorati_dal_1888 --headless --timeout 60 \
   --proxy "http://USERNAME-res-us:PASSWORD@proxy-us.proxy-cheap.com:5959"
 ```
@@ -73,8 +73,8 @@ fly secrets set PROXY_URL="http://USERNAME-res-us:PASSWORD@proxy-us.proxy-cheap.
 # In fly.toml you can set command like (or via Machines config.init.cmd):
 # [experimental]
 #  cmd = [
-#    "python3","relens_launch.py",
-#    "--job-id","${JOB_ID}",
+#    "python3","launch_and_store.py",
+#    "--file-name","${FILE_NAME}",
 #    "-u","${USERNAME}",
 #    "--headless","--timeout","${TIMEOUT}","--debug",
 #    "--proxy","${PROXY_URL}"
@@ -91,7 +91,7 @@ fly deploy
 ## Project Layout
 ```
 ├── launch.py            # CLI for printing JSON to stdout
-├── relens_launch.py     # Relens entrypoint (updates Supabase job context)
+├── launch_and_store.py  # Entrypoint (uploads JSON to Supabase Storage)
 ├── scraper.py           # Core logic (Selenium/selenium-wire)
 ├── utils/               # Helpers (debug, proxy extension)
 ├── requirements.txt
@@ -111,4 +111,4 @@ Based on and adapted from [mr-teslaa/instagram_user_post_scraper](https://github
 Licensed under the "Don't Be A Dick" Public License (DBAD) v1.1. See `LICENSE` for the full text. Learn more at [dbad-license.org](https://dbad-license.org/).
 
 ### Relens
-This scraper is configured to work with [Relens](https://relens.ai/) by default in Docker. The `Dockerfile` runs `relens_launch.py`, which scrapes Instagram and appends image items into a Supabase `jobs.context` for downstream AI/SEO workflows. Pass runtime args (e.g., `--job-id`, `-u`, `--timeout`, `--debug`, `--proxy`) via Fly Machines `config.init.cmd` or `fly.toml` command. Secrets needed: `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE`.
+This scraper is configured to work with [Relens](https://relens.ai/) by default in Docker. The `Dockerfile` runs `relens_launch.py`, which scrapes Instagram and uploads a JSON array of items to Supabase Storage bucket `ig-scraper` under the file name you provide. Pass runtime args (e.g., `--file-name`, `-u`, `--timeout`, `--debug`, `--proxy`) via Fly Machines `config.init.cmd` or `fly.toml` command. Secrets needed: `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE`. You can set `PROXY_URL` as a secret and omit `--proxy`.
