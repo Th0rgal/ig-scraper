@@ -30,7 +30,7 @@ COPY . .
 RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-# Default command uses the new entrypoint
-CMD ["python3", "launch.py"]
+# Default command runs relens_launch; override args via Machines config.init.cmd
+CMD ["python3", "relens_launch.py"]
 
 
