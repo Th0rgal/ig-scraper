@@ -4,3 +4,4 @@ blinker==1.7.0
 setuptools<81
 requests>=2.31.0
 PyJWT>=2.8.0
+Pillow>=10.0.0

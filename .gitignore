@@ -1,4 +1,5 @@
 env/
+.env.dev
 debug/
 .gitignore
 
