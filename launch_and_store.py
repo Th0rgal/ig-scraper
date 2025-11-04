@@ -5,6 +5,7 @@ import mimetypes
 import os
 import sys
 from typing import Any, Dict, List, Tuple
+import base64
 from urllib.parse import urlparse
 import uuid
 from io import BytesIO
@@ -159,6 +160,66 @@ def derive_object_name(project_id: str, sha1: str, ext: str) -> str:
     return f"{project_id}/{sha1}{ext}"
 
 
+def ai_generate_title_description(
+    image_bytes: bytes,
+    image_mime: str,
+    caption_text: str,
+    api_key: str,
+    model: str,
+) -> Tuple[str, str]:
+    try:
+        import importlib
+
+        openai_mod = importlib.import_module("openai")
+        OpenAI = getattr(openai_mod, "OpenAI")
+    except Exception:
+        print("The 'openai' package is required for AI generation.", file=sys.stderr)
+        sys.exit(2)
+
+    client = OpenAI(api_key=api_key)
+    b64 = base64.b64encode(image_bytes).decode("ascii")
+    data_url = f"data:{image_mime};base64,{b64}"
+
+    system_prompt = (
+        "You generate concise, human-friendly metadata for images. "
+        "Return strict JSON with keys 'title' and 'description'. The title is 1-5 words. "
+        "The description is one short sentence (<= 20 words)."
+    )
+
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"Instagram caption: {caption_text or ''}",
+                        },
+                        {"type": "image_url", "image_url": {"url": data_url}},
+                    ],
+                },
+            ],
+        )
+        content = resp.choices[0].message.content or "{}"
+        data = json.loads(content)
+        title = str(data.get("title") or "").strip()
+        description = str(data.get("description") or "").strip()
+        if not title:
+            title = (caption_text or "Instagram image").strip()[:60]
+        if not description:
+            description = (caption_text or "").strip().split("\n")[0][:160]
+        return title, description
+    except Exception as e:
+        print(f"[AI] Generation failed, falling back to caption: {e}", file=sys.stderr)
+        title = (caption_text or "Instagram image").strip()[:60]
+        description = (caption_text or "").strip().split("\n")[0][:160]
+        return title, description
+
+
 def serialize_items(items: List[Dict[str, Any]]) -> bytes:
     return json.dumps(items, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
@@ -193,6 +254,18 @@ def main():
         required=False,
         default=None,
         help="Optional UUID to tag this run; generated if omitted",
+    )
+    parser.add_argument(
+        "--openai-api-key",
+        required=False,
+        default=None,
+        help="OpenAI API key to enable AI-generated title and description",
+    )
+    parser.add_argument(
+        "--openai-model",
+        required=False,
+        default="gpt-4o-mini",
+        help="OpenAI model to use for image+caption to title/description",
     )
     parser.add_argument(
         "--supabase-url",
@@ -255,6 +328,19 @@ def main():
             content_type=content_type,
         )
 
+        # Prepare AI metadata if requested
+        title_text = None
+        description_text = caption
+        if args.openai_api_key:
+            t, d = ai_generate_title_description(
+                content_bytes,
+                content_type,
+                caption,
+                args.openai_api_key,
+                args.openai_model,
+            )
+            title_text, description_text = t, d
+
         row = {
             "project_id": args.project_id,
             "filename": object_name,
@@ -264,7 +350,8 @@ def main():
                 "instagram": args.username,
                 "run_id": run_id,
             },
-            "description": caption,
+            "title": title_text,
+            "description": description_text,
         }
         insert_asset_row(base_url, headers, row)
         uploaded_count += 1
