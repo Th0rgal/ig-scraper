@@ -89,6 +89,9 @@ docker run --rm -it ig-scraper:latest \
 ## Fly.io deploy (outline)
 ```bash
 fly auth login
+fly auth docker
+docker tag ig-scraper:latest registry.fly.io/relens-ig-scraper:latest
+docker push registry.fly.io/relens-ig-scraper:latest
 fly launch --no-deploy --copy-config --name your-unique-app
 # Optional: proxy secret
 fly secrets set PROXY_URL="http://USERNAME-res-us:PASSWORD@proxy-us.proxy-cheap.com:5959"

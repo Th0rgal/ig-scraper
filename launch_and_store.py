@@ -20,8 +20,8 @@ def _require_env(name: str) -> str:
     return val
 
 
-def build_headers() -> Dict[str, str]:
-    service_role = os.getenv("SUPABASE_SERVICE_ROLE")
+def build_headers(token_override: str | None = None) -> Dict[str, str]:
+    service_role = token_override or os.getenv("SUPABASE_SERVICE_ROLE")
     if not service_role:
         print("Missing SUPABASE_SERVICE_ROLE for authorization", file=sys.stderr)
         sys.exit(2)
@@ -194,14 +194,26 @@ def main():
         default=None,
         help="Optional UUID to tag this run; generated if omitted",
     )
+    parser.add_argument(
+        "--supabase-url",
+        required=False,
+        default=None,
+        help="Override SUPABASE_URL environment variable",
+    )
+    parser.add_argument(
+        "--supabase-service-role",
+        required=False,
+        default=None,
+        help="Override SUPABASE_SERVICE_ROLE environment variable",
+    )
     headless_group = parser.add_mutually_exclusive_group()
     headless_group.add_argument("--headless", dest="headless", action="store_true")
     headless_group.add_argument("--no-headless", dest="headless", action="store_false")
     parser.set_defaults(headless=True)
     args = parser.parse_args()
 
-    base_url = _require_env("SUPABASE_URL")
-    headers = build_headers()
+    base_url = args.supabase_url or _require_env("SUPABASE_URL")
+    headers = build_headers(args.supabase_service_role)
     headers.setdefault("Accept", "application/json")
 
     proxy_url = args.proxy or os.getenv("PROXY_URL")
